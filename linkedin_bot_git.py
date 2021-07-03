@@ -6,98 +6,104 @@ from email.mime.multipart import MIMEMultipart
 import smtplib
 from datetime import date
 
-class LinkedInBot():
 
-  def __init__(self):
-    self.driver = webdriver.Chrome()
+class LinkedInBot:
 
-  def login(self, username, password):
-    self.driver.get('https://www.linkedin.com/login') #Open LinkedIn login page
-    self.username = username
-    self.password = password
+    def __init__(self):
+        self.driver = webdriver.Chrome()
 
-    sleep(2)
+    def login(self, username, password):
+        self.driver.get('https://www.linkedin.com/login')  # Open LinkedIn login page
+        self.username = username
+        self.password = password
 
-    email_in = self.driver.find_element_by_xpath('//*[@id="username"]')
-    email_in.send_keys(self.username)
+        sleep(2)
 
-    pw_in = self.driver.find_element_by_xpath('//*[@id="password"]')
-    pw_in.send_keys(self.password)
+        email_in = self.driver.find_element_by_xpath('//*[@id="username"]')
+        email_in.send_keys(self.username)
 
+        pw_in = self.driver.find_element_by_xpath('//*[@id="password"]')
+        pw_in.send_keys(self.password)
 
-    sign_in_btn = self.driver.find_element_by_xpath('//*[@type="submit"]')
-    sign_in_btn.click()
-    sleep(5)
+        sign_in_btn = self.driver.find_element_by_xpath('//*[@type="submit"]')
+        sign_in_btn.click()
+        sleep(5)
 
-  def nav_to_jobs(self): #Navigates to the jobs page in LinkedIn
-    jobs_menu = self.driver.find_element_by_xpath('//*[@id="jobs-nav-item"]')
-    jobs_menu.click()
-    sleep(5)
+    def nav_to_jobs(self):  # Navigates to the jobs page in LinkedIn
+        jobs_menu = self.driver.find_element_by_xpath('//*[@id="jobs-nav-item"]')
+        jobs_menu.click()
+        sleep(5)
 
-  def nav_to_net(self): #Navigates to the networks page in LinkedIn
-    self.driver.find_element_by_xpath('//*[@id="mynetwork-nav-item"]').click()
-    sleep(5)
+    def nav_to_net(self):  # Navigates to the networks page in LinkedIn
+        self.driver.find_element_by_xpath('//*[@id="mynetwork-nav-item"]').click()
+        sleep(5)
 
-  def get_job_results(self, role, location):
-    self.role = role
-    self.location = location
+    def get_job_results(self, role, location):
+        self.role = role
+        self.location = location
 
-    self.driver.find_element_by_xpath('//*[@aria-label="Search by title, skill, or company"]').send_keys(self.role)
-    self.driver.find_element_by_xpath('//*[@aria-label="City, state, or zip code"]').send_keys(self.location)
-    self.driver.find_element_by_xpath('//*[@type="submit"]').click()
-    sleep(5)
+        self.driver.find_element_by_xpath('//*[@aria-label="Search by title, skill, or company"]').send_keys(self.role)
+        self.driver.find_element_by_xpath('//*[@aria-label="City, state, or zip code"]').send_keys(self.location)
+        self.driver.find_element_by_xpath('//*[@type="submit"]').click()
+        sleep(5)
 
-    jobs_df = pd.DataFrame(columns=['Company_Name', 'Role', 'Posted_Date', 'Job_Link']) #Create a new dataframe
+        jobs_df = pd.DataFrame(columns=['Company_Name', 'Role', 'Posted_Date', 'Job_Link'])  # Create a new dataframe
 
-    jobs = self.driver.find_elements_by_xpath('//*[@class="job-card-search__link-wrapper js-focusable disabled ember-view"]') #Get all the jobs
+        jobs = self.driver.find_elements_by_xpath(
+            '//*[@class="job-card-search__link-wrapper js-focusable disabled ember-view"]')  # Get all the jobs
 
-    for job in jobs:
-      job.click()
-      sleep(2)
-      job_link_linkedin = job.get_attribute("href")
-      role_name = self.driver.find_element_by_xpath('//*[@class="jobs-details-top-card__job-title t-20 t-black t-normal"]').text
-      company_name = self.driver.find_element_by_xpath('//*[@class="jobs-details-top-card__company-url ember-view"]').text
-      posted_deets = self.driver.find_element_by_xpath('//*[@class="jobs-details-top-card__job-info t-14 t-black--light t-normal"]').text
-      posted_deets_list = posted_deets.split()
-      if (len(posted_deets_list) == 12):
-        posted_date = posted_deets_list[3] + ' ' + posted_deets_list[4] + ' ' + posted_deets_list[5]
-      else:
-        posted_date = posted_deets_list[2] + ' ' + posted_deets_list[3] + ' ' + posted_deets_list[4]
+        for job in jobs:
+            job.click()
+            sleep(2)
+            job_link_linkedin = job.get_attribute("href")
+            role_name = self.driver.find_element_by_xpath(
+                '//*[@class="jobs-details-top-card__job-title t-20 t-black t-normal"]').text
+            company_name = self.driver.find_element_by_xpath(
+                '//*[@class="jobs-details-top-card__company-url ember-view"]').text
+            posted_deets = self.driver.find_element_by_xpath(
+                '//*[@class="jobs-details-top-card__job-info t-14 t-black--light t-normal"]').text
+            posted_deets_list = posted_deets.split()
+            if (len(posted_deets_list) == 12):
+                posted_date = posted_deets_list[3] + ' ' + posted_deets_list[4] + ' ' + posted_deets_list[5]
+            else:
+                posted_date = posted_deets_list[2] + ' ' + posted_deets_list[3] + ' ' + posted_deets_list[4]
 
-      jobs_df = jobs_df.append({'Company_Name': company_name, 'Role': role_name, 'Posted_Date': posted_date, 'Job_Link': job_link_linkedin}, ignore_index=True) #Append fields to the dataframe object
+            jobs_df = jobs_df.append({'Company_Name': company_name, 'Role': role_name, 'Posted_Date': posted_date,
+                                      'Job_Link': job_link_linkedin},
+                                     ignore_index=True)  # Append fields to the dataframe object
 
-    return jobs_df
+        return jobs_df
 
-  def send_requests(self, num):
-    self.num = num
+    def send_requests(self, num):
+        self.num = num
 
-    nets = self.driver.find_elements_by_xpath('//*[@data-control-name="people_connect"]')
-    total_reqs = len(nets)
+        nets = self.driver.find_elements_by_xpath('//*[@data-control-name="people_connect"]')
+        total_reqs = len(nets)
 
-    if self.num > total_reqs:
-      self.num = total_reqs
-      print("Exceeded maximun value. Sending only {} requests".format(total_reqs))
+        if self.num > total_reqs:
+            self.num = total_reqs
+            print("Exceeded maximun value. Sending only {} requests".format(total_reqs))
 
-    for i in range(self.num):
-      nets[i].click()
+        for i in range(self.num):
+            nets[i].click()
 
-  def email(self, df):
-    self.df = df
+    def email(self, df):
+        self.df = df
 
-    Date = date.today().strftime("%m/%d/%Y")
+        Date = date.today().strftime("%m/%d/%Y")
 
-    table_header = ''
-    for column in self.df.columns:
-      table_header = table_header + '<th>' + column + '</th>'
+        table_header = ''
+        for column in self.df.columns:
+            table_header = table_header + '<th>' + column + '</th>'
 
-    table_data = ''
-    for row in range(len(self.df.index)):
-      table_data = table_data + '<tr>'
-      for col in range(len(self.df.columns)):
-        table_data = table_data + '<td>'+str(self.df.iloc[row,col])+'</td>'
-      table_data = table_data + '<tr>'
+        table_data = ''
+        for row in range(len(self.df.index)):
+            table_data = table_data + '<tr>'
+            for col in range(len(self.df.columns)):
+                table_data = table_data + '<td>' + str(self.df.iloc[row, col]) + '</td>'
+            table_data = table_data + '<tr>'
 
-    HTML = """
+        HTML = """
           <!DOCTYPE html>
           <html>
             <head>
@@ -153,11 +159,11 @@ class LinkedInBot():
               <table>
                 <thead>
                   <tr style="border: 1px solid #1b1e24;">
-                  """+table_header+"""
+                  """ + table_header + """
                   </tr>
                 </thead>
                 <tbody>
-                  """+table_data+"""
+                  """ + table_data + """
                 </tbody>
               </table>
               <br><br>
@@ -167,39 +173,38 @@ class LinkedInBot():
             </body>
           </html>
           """
-    def sendEmail(_from,_to,_subj,_body) :
-        msg = MIMEMultipart("alternative", None, [MIMEText(HTML, 'html')])
-        #msg = MIMEText(str(_body))
-        msg['Subject'] = _subj
-        msg['From'] = _from
-        msg['To'] = _to
 
-        s = smtplib.SMTP('smtp.gmail.com', 587) #SMTP gmail server and port
-        s.ehlo()
-        s.starttls()
-        s.login('username', 'password') #Sender gmail username and password
-        s.sendmail(_from, [_to], msg.as_string())
-        s.quit()
+        def sendEmail(_from, _to, _subj, _body):
+            msg = MIMEMultipart("alternative", None, [MIMEText(HTML, 'html')])
+            # msg = MIMEText(str(_body))
+            msg['Subject'] = _subj
+            msg['From'] = _from
+            msg['To'] = _to
 
-    if len(self.df.index) > 0:
-        sendEmail('sourabh.amancha@gmail.com','sourabh.amancha@gmail.com','Jobs Data - '+Date,'')
+            s = smtplib.SMTP('smtp.gmail.com', 587)  # SMTP gmail server and port
+            s.ehlo()
+            s.starttls()
+            s.login('username', 'password')  # Sender gmail username and password
+            s.sendmail(_from, [_to], msg.as_string())
+            s.quit()
 
+        if len(self.df.index) > 0:
+            sendEmail('sourabh.amancha@gmail.com', 'sourabh.amancha@gmail.com', 'Jobs Data - ' + Date, '')
 
 
 bot = LinkedInBot()
 
-#Logging in to LinkedIn
-bot.login('username', 'password')  #Provide LinkedIn username and password
+# Logging in to LinkedIn
+bot.login('username', 'password')  # Provide LinkedIn username and password
 
-#Getting job results as an email
+# Getting job results as an email
 bot.nav_to_jobs()
-df = bot.get_job_results('software engineer', 'hyderabad') #Provide role and location to search in LinkedIn jobs
+df = bot.get_job_results('software engineer', 'hyderabad')  # Provide role and location to search in LinkedIn jobs
 print(df)
 bot.email(df)
 
-#Sending 'n' requests of a max of 40 requests
+# Sending 'n' requests of a max of 40 requests
 bot.nav_to_net()
 bot.send_requests(10)
-
 
 bot.driver.quit()

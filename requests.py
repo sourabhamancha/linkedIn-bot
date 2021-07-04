@@ -1,23 +1,32 @@
+# MARK:- weBDriver
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+# MARK:- Time
 from time import sleep
 from selenium.webdriver.common.keys import Keys
 
+# MARK:- Credential manger
+from Cred import Cred
+
 
 class LinkedInBotMain:
+    # MARK:- Username and password for linked in account 
+    username = "nan"
+    password = "nan"
+    requestCnt = 10
+    sleepCnt2Second = 2
+    sleepCnt5Second = 5
 
     def __init__(self):
-        chrome_options = Options()
-        chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--no-sandbox")
-        self.driver = webdriver.Chrome(options=chrome_options)
+        self.driver = webdriver.Firefox()
+
+    # MARK:- login and open account page
 
     def login(self, username, password):
         self.driver.get('https://www.linkedin.com/login')  # Open LinkedIn login page
         self.username = username
         self.password = password
 
-        sleep(2)
+        sleep(self.sleepCnt2Second)
 
         email_in = self.driver.find_element_by_xpath('//*[@id="username"]')
         email_in.send_keys(self.username)
@@ -27,14 +36,16 @@ class LinkedInBotMain:
 
         sign_in_btn = self.driver.find_element_by_xpath('//*[@type="submit"]')
         sign_in_btn.click()
-        sleep(5)
+        sleep(self.sleepCnt5Second)
 
         try:
             not_now_btn = self.driver.find_element_by_xpath('//*[@class="btn__secondary--large-muted"]')
             not_now_btn.click()
-            sleep(5)
+            sleep(self.sleepCnt5Second)
         except Exception:
             print("There is no 'Remember me' section this time!")
+
+    # MARK:- search for what ever
 
     def search(self, keyword):
         self.keyword = keyword
@@ -44,47 +55,49 @@ class LinkedInBotMain:
             '//*[@class="search-global-typeahead__input always-show-placeholder"]')
         search_input.send_keys(self.keyword)
         search_input.send_keys(Keys.ENTER)
-        sleep(5)
+        sleep(self.sleepCnt5Second)
         self.driver.find_element_by_xpath('//*[@aria-label="People"]').click()
 
-    def send_requests(self, num):
+    # MARK:- send requests to what ever you want
+
+    def send_requests(self):
+        num = self.requestCnt
         total = 0
         while total <= num:
             count = 0
             while count <= 7:
                 try:
-                    sleep(2)
+                    sleep(self.sleepCnt2Second)
                     self.driver.find_element_by_xpath(
                         '//*[@class="artdeco-button artdeco-button--2 artdeco-button--secondary ember-view"]').click()
-                    sleep(2)
+                    sleep(self.sleepCnt2Second)
                     title = self.driver.find_element_by_xpath('//*[@id="send-invite-modal"]').text
                     if title == "Connect":
-                        sleep(2)
+                        sleep(self.sleepCnt2Second)
                         self.driver.find_element_by_xpath('//*[@aria-label="Dismiss"]').click()
                         count = count + 7
                         break
-                    sleep(2)
+                    sleep(self.sleepCnt2Second)
                     self.driver.find_element_by_xpath('//*[@aria-label="Send now"]').click()
                     count = count + 1
                     total = total + 1
                     print("Total requests sent: {}".format(total))
-                except Exception:
-                    print("Exception")
+                except Exception as exc:
+                    print("Exception", exc.__str__())
                     count = count + 1
                     continue
-            sleep(2)
+            sleep(self.sleepCnt2Second)
             self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            sleep(2)
+            sleep(self.sleepCnt2Second)
             next_button = self.driver.find_element_by_xpath('//*[@aria-label="Next"]')
             next_button.click()
 
 
 bot = LinkedInBotMain()
-bot.driver.get("https:google.com.eg")
 # #Logging in to LinkedIn
-# bot.login("self.username", "self.password")  # Provide LinkedIn username and password
+bot.login(Cred.getuser_name(), Cred.getuser_password())  # Provide LinkedIn username and password
 # Searching for people
-# bot.search("recruiter at apple")  # Provide the keyword for search
+bot.search("recruiter ")  # Provide the keyword for search
 # Sending requests
-# bot.send_requests(10)  # Provide the total requests to be sent as an attribute
+bot.send_requests()  # Provide the total requests to be sent as an attribute
 bot.driver.quit()

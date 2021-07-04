@@ -4,7 +4,7 @@ from selenium import webdriver
 from time import sleep
 from selenium.webdriver.common.keys import Keys
 
-# MARK:- Credential manger
+# MARK:- Credential manger (Create your own)
 from Cred import Cred
 
 
@@ -48,7 +48,7 @@ class LinkedInBotMain:
     # MARK:- search for what ever
 
     def search(self, keyword):
-        self.keyword = keyword 
+        self.keyword = keyword
         self.driver.find_element_by_xpath(
             '//*[@class="search-global-typeahead   global-nav__search-typeahead"]').click()
         search_input = self.driver.find_element_by_xpath(
